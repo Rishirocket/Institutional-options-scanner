@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Options Telegram Website Bot</title>
+  <style>
+    body{font-family:Arial, sans-serif;margin:0;background:#0b1020;color:#eaf0ff}.wrap{max-width:1100px;margin:0 auto;padding:32px}.card{background:#151b2f;border:1px solid #26304d;border-radius:16px;padding:22px;margin:16px 0}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}.pill{display:inline-block;background:#26304d;padding:8px 10px;border-radius:999px;margin:4px;font-size:13px}.green{color:#52d273}.red{color:#ff6b6b}pre{white-space:pre-wrap;background:#09101f;padding:14px;border-radius:12px;overflow:auto}button{background:#5b7cfa;color:white;border:0;border-radius:10px;padding:12px 16px;cursor:pointer}button:hover{opacity:.9}</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Options Telegram Website Bot</h1>
+  <p>Scans SPY, QQQ, and liquid large caps for 7DTE, 30DTE, and 90DTE CALL/PUT option setups and sends Telegram alerts.</p>
+
+  <div class="grid">
+    <div class="card"><h3>Tickers</h3><h2>{{ tickers|length }}</h2></div>
+    <div class="card"><h3>DTE Buckets</h3><h2>{{ dte.keys()|list|join(', ') }}</h2></div>
+    <div class="card"><h3>Alert Score</h3><h2>{{ score }}/100+</h2></div>
+  </div>
+
+  <div class="card">
+    <h2>Latest Scan</h2>
+    {% if state %}
+      <p><b>Time:</b> {{ state.time }}</p>
+      <p><b>Tickers scanned:</b> {{ state.tickers }}</p>
+      <p><b>Alerts:</b> <span class="green">{{ state.alerts }}</span></p>
+      {% if state.errors %}<h3>Recent Errors</h3><pre>{{ state.errors }}</pre>{% endif %}
+      {% if state.alert_texts %}<h3>Recent Alerts</h3>{% for a in state.alert_texts %}<pre>{{ a }}</pre>{% endfor %}{% endif %}
+    {% else %}
+      <p>No scan has run yet.</p>
+    {% endif %}
+  </div>
+
+  <div class="card">
+    <h2>Universe</h2>
+    {% for t in tickers %}<span class="pill">{{ t }}</span>{% endfor %}
+  </div>
+
+  <div class="card">
+    <h2>Manual Test</h2>
+    <p>Use GitHub Actions for scheduled scans. This button can time out on free hosting, but works locally.</p>
+    <button onclick="fetch('/api/run?test=1',{method:'POST'}).then(r=>r.json()).then(j=>alert('Done: '+JSON.stringify(j)))">Run test scan</button>
+  </div>
+</div>
+</body>
+</html>
