@@ -268,7 +268,7 @@ def run_scan(send_test: bool = False) -> Dict:
     print(f"Running {len(batch)} tickers:")
     print(batch)
     if send_test:
-        send_alert("✅ Telegram test from GitHub Actions / Website Bot")
+        send_alert("👋 Hi from Institutional Options Scanner")
     all_alerts: List[str] = []
     errors: List[str] = []
     for ticker in batch:
