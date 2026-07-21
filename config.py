@@ -1,9 +1,19 @@
-# Options Telegram Website Bot config
+"""Weekly/Daily/4H institutional options scanner configuration."""
+
 DATA_DIR = "data"
 MAX_TICKERS_PER_RUN = 80
 SLEEP_BETWEEN_TICKERS = 1.0
-OPTION_CACHE_MINUTES = 15
-ALERT_SCORE_MIN = 50
+
+# Kept only because the original Flask app imports it. Qualification is now
+# mandatory-rule based rather than a loose score threshold.
+ALERT_SCORE_MIN = 0
+
+# Entry confirmation and risk settings
+MIN_4H_RVOL = 1.30
+ENTRY_BUFFER_ATR = 0.05
+STOP_BUFFER_ATR = 0.10
+MAX_UNDERLYING_RISK_PCT = 3.0
+WATCH_DISTANCE_ATR = 1.0
 
 WHITELIST = [
     # Index ETFs
@@ -39,7 +49,7 @@ WHITELIST = [
     # Cybersecurity
     "PANW", "CRWD", "FTNT", "NET", "RBRK", "OKTA",
 
-    # Biotech / Genomics - stocks only
+    # Biotech / Genomics
     "TEM", "BEAM", "TWST", "MRNA",
 
     # Homebuilders
@@ -54,9 +64,9 @@ WHITELIST = [
 
 BLACKLIST = []
 
-# DTE buckets
+# The scanner selects the expiration nearest the midpoint of each range.
 DTE_BUCKETS = {
     "7DTE": (5, 9),
-    "30DTE": (25, 40),
-    "90DTE": (75, 120),
+    "14DTE": (12, 16),
+    "28DTE": (25, 32),
 }

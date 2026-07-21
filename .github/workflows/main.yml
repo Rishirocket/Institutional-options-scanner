@@ -3,24 +3,55 @@ name: Institutional Options Scanner
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 * * * *"
+    # Run after the first completed 4H session bar (13:30 ET).
+    # Both UTC hours are included to cover EDT and EST.
+    - cron: "40 17,18 * * 1-5"
+    # Run after the closing session bar (16:00 ET) and evaluate next-session earnings.
+    - cron: "10 20,21 * * 1-5"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: institutional-options-scanner
+  cancel-in-progress: false
 
 jobs:
   scan:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
 
     steps:
-      - uses: actions/checkout@v5
+      - name: Check out repository
+        uses: actions/checkout@v7
 
-      - uses: actions/setup-python@v6
+      - name: Set up Python
+        uses: actions/setup-python@v7
         with:
           python-version: "3.12"
+          cache: pip
 
       - name: Install dependencies
-        run: pip install -r requirements.txt
+        run: python -m pip install --upgrade pip && pip install -r requirements.txt
+
+      - name: Restore scanner state
+        uses: actions/cache/restore@v6
+        with:
+          path: data/state.json
+          key: institutional-options-state-${{ github.run_id }}
+          restore-keys: |
+            institutional-options-state-
 
       - name: Run scanner
-        run: python scanner.py
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          PYTHONUNBUFFERED: "1"
+        run: python scanner.py
+
+      - name: Save scanner state
+        if: always()
+        uses: actions/cache/save@v6
+        with:
+          path: data/state.json
+          key: institutional-options-state-${{ github.run_id }}

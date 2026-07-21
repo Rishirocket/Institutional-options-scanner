@@ -3,29 +3,167 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Options Telegram Website Bot</title>
+  <title>Weekly / Daily / 4H Options Scanner</title>
+
   <style>
-    body{font-family:Arial, sans-serif;margin:0;background:#0b1020;color:#eaf0ff}.wrap{max-width:1100px;margin:0 auto;padding:32px}.card{background:#151b2f;border:1px solid #26304d;border-radius:16px;padding:22px;margin:16px 0}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}.pill{display:inline-block;background:#26304d;padding:8px 10px;border-radius:999px;margin:4px;font-size:13px}.green{color:#52d273}.red{color:#ff6b6b}pre{white-space:pre-wrap;background:#09101f;padding:14px;border-radius:12px;overflow:auto}button{background:#5b7cfa;color:white;border:0;border-radius:10px;padding:12px 16px;cursor:pointer}button:hover{opacity:.9}</style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      background: #0b1020;
+      color: #eaf0ff;
+    }
+
+    .wrap {
+      max-width: 1150px;
+      margin: 0 auto;
+      padding: 32px;
+    }
+
+    .card {
+      background: #151b2f;
+      border: 1px solid #26304d;
+      border-radius: 16px;
+      padding: 22px;
+      margin: 16px 0;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+    }
+
+    .pill {
+      display: inline-block;
+      background: #26304d;
+      padding: 8px 10px;
+      border-radius: 999px;
+      margin: 4px;
+      font-size: 13px;
+    }
+
+    .green {
+      color: #52d273;
+    }
+
+    .red {
+      color: #ff6b6b;
+    }
+
+    .muted {
+      color: #aeb9d8;
+    }
+
+    pre {
+      white-space: pre-wrap;
+      background: #09101f;
+      padding: 14px;
+      border-radius: 12px;
+      border-left: 4px solid #5b7cfa;
+      overflow: auto;
+    }
+
+    button {
+      background: #5b7cfa;
+      color: white;
+      border: 0;
+      border-radius: 10px;
+      padding: 12px 16px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      opacity: 0.9;
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: wait;
+    }
+  </style>
 </head>
+
 <body>
 <div class="wrap">
-  <h1>Options Telegram Website Bot</h1>
-  <p>Scans SPY, QQQ, and liquid large caps for 7DTE, 30DTE, and 90DTE CALL/PUT option setups and sends Telegram alerts.</p>
+  <h1>Weekly / Daily / 4H Options Scanner</h1>
+
+  <p class="muted">
+    Scans 7-, 14-, and 28-DTE CALL and PUT contracts.
+    Weekly and daily charts determine direction, while a completed
+    4-hour candle determines the entry.
+  </p>
 
   <div class="grid">
-    <div class="card"><h3>Tickers</h3><h2>{{ tickers|length }}</h2></div>
-    <div class="card"><h3>DTE Buckets</h3><h2>{{ dte.keys()|list|join(', ') }}</h2></div>
-    <div class="card"><h3>Alert Score</h3><h2>{{ score }}/100+</h2></div>
+    <div class="card">
+      <h3>Tickers</h3>
+      <h2>{{ tickers|length }}</h2>
+    </div>
+
+    <div class="card">
+      <h3>DTE Buckets</h3>
+      <h2>{{ dte.keys()|list|join(', ') }}</h2>
+    </div>
+
+    <div class="card">
+      <h3>Qualification</h3>
+      <h2>Mandatory Alignment</h2>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Required Evidence</h2>
+
+    <span class="pill">Weekly trend</span>
+    <span class="pill">Daily trend</span>
+    <span class="pill">4H EMA entry</span>
+    <span class="pill">4H volume</span>
+    <span class="pill">SPY regime</span>
+    <span class="pill">20D/63D RS</span>
+    <span class="pill">Above/below POC</span>
+    <span class="pill">Option liquidity</span>
+    <span class="pill">Earnings outlook</span>
+    <span class="pill">Analyst actions</span>
   </div>
 
   <div class="card">
     <h2>Latest Scan</h2>
+
     {% if state %}
       <p><b>Time:</b> {{ state.time }}</p>
+
+      <p>
+        <b>Strategy:</b>
+        {{ state.strategy or 'Weekly + Daily + completed 4H entry' }}
+      </p>
+
       <p><b>Tickers scanned:</b> {{ state.tickers }}</p>
-      <p><b>Alerts:</b> <span class="green">{{ state.alerts }}</span></p>
-      {% if state.errors %}<h3>Recent Errors</h3><pre>{{ state.errors }}</pre>{% endif %}
-      {% if state.alert_texts %}<h3>Recent Alerts</h3>{% for a in state.alert_texts %}<pre>{{ a }}</pre>{% endfor %}{% endif %}
+
+      <p>
+        <b>New alerts:</b>
+        <span class="green">{{ state.alerts }}</span>
+      </p>
+
+      <p>
+        <b>Duplicate alerts suppressed:</b>
+        {{ state.duplicates_suppressed or 0 }}
+      </p>
+
+      {% if state.errors %}
+        <h3 class="red">Recent Errors</h3>
+        <pre>{{ state.errors | tojson(indent=2) }}</pre>
+      {% endif %}
+
+      {% if state.alert_texts %}
+        <h3>Recent Alerts</h3>
+
+        {% for alert in state.alert_texts %}
+          <pre>{{ alert }}</pre>
+        {% endfor %}
+      {% else %}
+        <p class="muted">
+          No new setup met every mandatory condition during the latest scan.
+        </p>
+      {% endif %}
     {% else %}
       <p>No scan has run yet.</p>
     {% endif %}
@@ -33,14 +171,58 @@
 
   <div class="card">
     <h2>Universe</h2>
-    {% for t in tickers %}<span class="pill">{{ t }}</span>{% endfor %}
+
+    {% for ticker in tickers %}
+      <span class="pill">{{ ticker }}</span>
+    {% endfor %}
   </div>
 
   <div class="card">
     <h2>Manual Test</h2>
-    <p>Use GitHub Actions for scheduled scans. This button can time out on free hosting, but works locally.</p>
-    <button onclick="fetch('/api/run?test=1',{method:'POST'}).then(r=>r.json()).then(j=>alert('Done: '+JSON.stringify(j)))">Run test scan</button>
+
+    <p class="muted">
+      Scheduled scans should run through GitHub Actions.
+      A full manual scan can take several minutes.
+    </p>
+
+    <button id="runButton" onclick="runScan()">
+      Run test scan
+    </button>
+
+    <pre id="runResult" style="display:none"></pre>
   </div>
 </div>
+
+<script>
+  async function runScan() {
+    const button = document.getElementById("runButton");
+    const result = document.getElementById("runResult");
+
+    button.disabled = true;
+    button.textContent = "Running…";
+
+    result.style.display = "block";
+    result.textContent = "Scan started…";
+
+    try {
+      const response = await fetch("/api/run?test=1", {
+        method: "POST"
+      });
+
+      const payload = await response.json();
+
+      if (!response.ok) {
+        throw new Error(payload.error || "Scanner request failed");
+      }
+
+      result.textContent = JSON.stringify(payload, null, 2);
+    } catch (error) {
+      result.textContent = "Scan failed: " + error.message;
+    } finally {
+      button.disabled = false;
+      button.textContent = "Run test scan";
+    }
+  }
+</script>
 </body>
 </html>
